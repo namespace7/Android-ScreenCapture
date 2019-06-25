@@ -2,6 +2,9 @@ package com.namespace.screenrec;
 
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -19,6 +22,7 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -60,7 +64,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
+
+
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -72,7 +80,8 @@ public class MainActivity extends AppCompatActivity {
 
         mProjectionManager = (MediaProjectionManager) getSystemService
                 (Context.MEDIA_PROJECTION_SERVICE);
-
+        //Toast.makeText(getApplicationContext(), "extra is working",
+        //                        Toast.LENGTH_LONG).show();
         mToggleButton = (ToggleButton) findViewById(R.id.toggle);
         mToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -135,12 +144,33 @@ public class MainActivity extends AppCompatActivity {
 
             initRecorder();
             shareScreen();
+            notification();
+
         } else {
             mMediaRecorder.stop();
             mMediaRecorder.reset();
             Log.v(TAG, "Stopping Recording");
             stopScreenSharing();
         }
+    }
+
+    private void notification(){
+
+        Intent notification_intent = new Intent(getBaseContext(),MainActivity.class);
+        notification_intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent P_intent = PendingIntent.getActivity(MainActivity.this,0,notification_intent,PendingIntent.FLAG_ONE_SHOT);
+        Notification notification_message = new Notification.Builder(MainActivity.this)
+                .setTicker("ScreenRec")
+                .setContentTitle("Recording Screen...")
+                .setContentText("Tap here to return to the Application")
+                .setSmallIcon(R.drawable.icon)
+                .setContentIntent(P_intent).getNotification();
+
+
+        NotificationManager notification_manager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+        notification_manager.notify(0,notification_message);
+        Log.v("Notification", "After function");
+
     }
 
     private void shareScreen() {
@@ -170,15 +200,10 @@ public class MainActivity extends AppCompatActivity {
                 sb.append(c);
             }
             String output  = sb.toString();
-            String path =  "ScreenRec-" + output + ".mp4";
+          //  String path =  "ScreenRec-" + output + ".mp4";
             output = "/"+ "ScreenRec-" +output + ".mp4";
 
-            Path_name = path;
-            /*File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/ScreenRec");
-            if (!file.exists()) {
-                file.mkdirs();
-            }
-            */
+
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
             mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
             mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
@@ -187,13 +212,17 @@ public class MainActivity extends AppCompatActivity {
                             .DIRECTORY_DOWNLOADS)  +output);
             mMediaRecorder.setVideoSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
             mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-            mMediaRecorder.setVideoEncodingBitRate(512 * 1000);
+            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+            mMediaRecorder.setVideoEncodingBitRate(2000000);
             mMediaRecorder.setVideoFrameRate(30);
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             int orientation = ORIENTATIONS.get(rotation + 90);
             mMediaRecorder.setOrientationHint(orientation);
             mMediaRecorder.prepare();
+
+
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -210,6 +239,7 @@ public class MainActivity extends AppCompatActivity {
             }
             mMediaProjection = null;
             stopScreenSharing();
+
         }
     }
 
@@ -229,6 +259,8 @@ public class MainActivity extends AppCompatActivity {
         destroyMediaProjection();
     }
 
+
+
     private void destroyMediaProjection() {
         if (mMediaProjection != null) {
             mMediaProjection.unregisterCallback(mMediaProjectionCallback);
@@ -236,6 +268,9 @@ public class MainActivity extends AppCompatActivity {
             mMediaProjection = null;
 
         }
+        NotificationManager mNotificationManager = (NotificationManager)
+                getSystemService(NOTIFICATION_SERVICE);
+        mNotificationManager.cancelAll();
         Log.i(TAG, "MediaProjection Stopped");
         AlertDialog dialog;
         final AlertDialog.Builder alertDialog = new AlertDialog.Builder(MainActivity.this);
