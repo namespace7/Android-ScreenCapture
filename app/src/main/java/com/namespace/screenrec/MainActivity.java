@@ -200,8 +200,12 @@ public class MainActivity extends AppCompatActivity {
                 sb.append(c);
             }
             String output  = sb.toString();
-          //  String path =  "ScreenRec-" + output + ".mp4";
+            String path =  "ScreenRec-" + output + ".mp4";
             output = "/"+ "ScreenRec-" +output + ".mp4";
+
+            Path_name = path;
+
+
 
 
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
